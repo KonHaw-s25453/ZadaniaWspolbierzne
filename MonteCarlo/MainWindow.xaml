@@ -1,0 +1,167 @@
+<Window x:Class="MonteCarlo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Monte Carlo – Szacowanie liczby π"
+        Height="700" Width="900"
+        MinHeight="600" MinWidth="800"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <Style x:Key="InfoLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+        <Style x:Key="ResultLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,6,0,2"/>
+            <Setter Property="Foreground" Value="#333"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Menu -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Iteracje">
+                <MenuItem Header="1 000"         Tag="1000"      Click="MenuIterations_Click"/>
+                <MenuItem Header="10 000"         Tag="10000"     Click="MenuIterations_Click"/>
+                <MenuItem Header="100 000"        Tag="100000"    Click="MenuIterations_Click"/>
+                <MenuItem Header="500 000"        Tag="500000"    Click="MenuIterations_Click"/>
+                <MenuItem Header="1 000 000"      Tag="1000000"   Click="MenuIterations_Click"/>
+                <MenuItem Header="5 000 000"      Tag="5000000"   Click="MenuIterations_Click"/>
+                <MenuItem Header="10 000 000"     Tag="10000000"  Click="MenuIterations_Click"/>
+            </MenuItem>
+            <MenuItem Header="Akcje">
+                <MenuItem Header="Wyczyść wykres" Click="MenuClear_Click"/>
+                <Separator/>
+                <MenuItem Header="Zakończ"        Click="MenuExit_Click"/>
+            </MenuItem>
+            <MenuItem Header="Pomoc">
+                <MenuItem Header="O programie"    Click="MenuAbout_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Main content -->
+        <Grid Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="260"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Canvas area -->
+            <Border Grid.Column="0" BorderBrush="#888" BorderThickness="1"
+                    Margin="0,0,10,0" Background="White">
+                <Canvas x:Name="MonteCarloCanvas" ClipToBounds="True"
+                        SizeChanged="Canvas_SizeChanged"/>
+            </Border>
+
+            <!-- Control panel -->
+            <StackPanel Grid.Column="1">
+
+                <!-- Iterations -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Liczba iteracji (łącznie):"/>
+                <TextBox x:Name="TxtIterations" Text="100000"
+                         FontSize="13" Padding="4"
+                         PreviewTextInput="TxtIterations_PreviewTextInput"/>
+
+                <TextBlock Style="{StaticResource InfoLabelStyle}"
+                           Text="{Binding ElementName=TxtIterations, Path=Text,
+                                  StringFormat='Wątki: {0} (rdzenie CPU)'}"
+                           x:Name="LblThreadCount" Margin="0,4"/>
+
+                <!-- Divider -->
+                <Separator Margin="0,8"/>
+
+                <!-- Thread list section -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="a) Wątki (List&lt;Thread&gt;):"/>
+                <Button x:Name="BtnRunThreads" Content="Uruchom wątki"
+                        Padding="6,4" Margin="0,4,0,2"
+                        Click="BtnRunThreads_Click"/>
+                <TextBlock Style="{StaticResource InfoLabelStyle}"
+                           x:Name="LblThreadsStatus" Text="Gotowy" Foreground="#555"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Style="{StaticResource InfoLabelStyle}" Text="π ≈ "/>
+                    <TextBlock x:Name="LblPiThreads"
+                               Style="{StaticResource ResultLabelStyle}"
+                               Text="—" Foreground="#1565C0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource InfoLabelStyle}" Text="Czas: "/>
+                    <TextBlock x:Name="LblTimeThreads"
+                               Style="{StaticResource InfoLabelStyle}"
+                               Text="—" Foreground="#555"/>
+                </StackPanel>
+
+                <!-- Divider -->
+                <Separator Margin="0,8"/>
+
+                <!-- ThreadPool section -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="b) Pula wątków (ThreadPool):"/>
+                <Button x:Name="BtnRunThreadPool" Content="Uruchom ThreadPool"
+                        Padding="6,4" Margin="0,4,0,2"
+                        Click="BtnRunThreadPool_Click"/>
+                <TextBlock Style="{StaticResource InfoLabelStyle}"
+                           x:Name="LblThreadPoolStatus" Text="Gotowy" Foreground="#555"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Style="{StaticResource InfoLabelStyle}" Text="π ≈ "/>
+                    <TextBlock x:Name="LblPiThreadPool"
+                               Style="{StaticResource ResultLabelStyle}"
+                               Text="—" Foreground="#2E7D32"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource InfoLabelStyle}" Text="Czas: "/>
+                    <TextBlock x:Name="LblTimeThreadPool"
+                               Style="{StaticResource InfoLabelStyle}"
+                               Text="—" Foreground="#555"/>
+                </StackPanel>
+
+                <!-- Divider -->
+                <Separator Margin="0,8"/>
+
+                <!-- Comparison -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Porównanie:"/>
+                <TextBlock x:Name="LblComparison"
+                           Style="{StaticResource InfoLabelStyle}"
+                           TextWrapping="Wrap"
+                           Text="Uruchom oba warianty, aby zobaczyć porównanie."
+                           Foreground="#555"/>
+
+                <!-- Divider -->
+                <Separator Margin="0,8"/>
+
+                <!-- Info -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Informacje:"/>
+                <TextBlock x:Name="LblCoreCount"
+                           Style="{StaticResource InfoLabelStyle}"
+                           Foreground="#555"/>
+                <TextBlock Style="{StaticResource InfoLabelStyle}"
+                           TextWrapping="Wrap"
+                           Text="Czerwone = poza okręgiem&#10;Niebieskie = wewnątrz okręgu"
+                           Foreground="#555" Margin="0,4"/>
+
+                <!-- Legend -->
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <Ellipse Width="12" Height="12" Fill="SteelBlue" Margin="0,0,6,0"/>
+                    <TextBlock Text="wewnątrz koła" Style="{StaticResource InfoLabelStyle}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="12" Height="12" Fill="Tomato" Margin="0,0,6,0"/>
+                    <TextBlock Text="poza kołem" Style="{StaticResource InfoLabelStyle}"/>
+                </StackPanel>
+
+                <!-- Progress bar -->
+                <Separator Margin="0,8"/>
+                <ProgressBar x:Name="ProgressBar" Height="16" Minimum="0" Maximum="100"
+                             Value="0" Margin="0,4"/>
+                <TextBlock x:Name="LblProgress" Style="{StaticResource InfoLabelStyle}"
+                           Text="" HorizontalAlignment="Center"/>
+
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>
