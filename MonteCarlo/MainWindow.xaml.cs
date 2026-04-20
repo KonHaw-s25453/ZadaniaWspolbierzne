@@ -53,15 +53,15 @@ public partial class MainWindow : Window
     private static (double pi, List<(double x, double y, bool inside)> points)
         MonteCarloWorker(int iterations, int maxPoints)
     {
-        var rng = new Random();
         long inside = 0;
         var points = new List<(double, double, bool)>(Math.Min(iterations, maxPoints));
+        // Collect every Nth point so total visual points ≈ maxPoints
         int step = iterations <= maxPoints ? 1 : iterations / maxPoints;
 
         for (int i = 0; i < iterations; i++)
         {
-            double x = rng.NextDouble();
-            double y = rng.NextDouble();
+            double x = Random.Shared.NextDouble();
+            double y = Random.Shared.NextDouble();
             bool hit = (x * x + y * y) <= 1.0;
             if (hit) inside++;
 
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
                 points.Add((x, y, hit));
         }
 
-        double pi = 4.0 * inside / iterations;
+        double pi = 4.0 * inside / (double)iterations;
         return (pi, points);
     }
 
@@ -108,7 +108,7 @@ public partial class MainWindow : Window
         var stopwatch  = Stopwatch.StartNew();
         var threads    = new List<Thread>(_threadCount);
         // CountdownEvent – synchronizacja głównego wątku z wątkami roboczymi
-        using var countdown = new CountdownEvent(_threadCount);
+        var countdown = new CountdownEvent(_threadCount);
 
         for (int t = 0; t < _threadCount; t++)
         {
@@ -144,7 +144,14 @@ public partial class MainWindow : Window
         // aby nie blokować wątku UI
         Thread waitThread = new(() =>
         {
-            countdown.Wait();   // blokuje aż wszystkie wątki skończą
+            try
+            {
+                countdown.Wait();   // blokuje aż wszystkie wątki skończą
+            }
+            finally
+            {
+                countdown.Dispose();
+            }
             stopwatch.Stop();
 
             // Obliczamy wynik jako średnią z wątków (zmienna globalna)
@@ -242,9 +249,15 @@ public partial class MainWindow : Window
         // Czekamy na zakończenie wszystkich zadań w osobnym wątku tła
         Thread waitThread = new(() =>
         {
-            countdown.Wait();   // blokuje aż wszystkie zadania ThreadPool skończą
+            try
+            {
+                countdown.Wait();   // blokuje aż wszystkie zadania ThreadPool skończą
+            }
+            finally
+            {
+                countdown.Dispose();
+            }
             stopwatch.Stop();
-            countdown.Dispose();
 
             // Obliczamy wynik jako średnią (zmienna globalna)
             double resultPi;
