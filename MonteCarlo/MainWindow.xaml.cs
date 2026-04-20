@@ -32,6 +32,7 @@ public partial class MainWindow : Window
 
     // ── Rozmiar obszaru rysowania ──────────────────────────────────────────
     private double _canvasSize = 400;
+    private const double MathPi = Math.PI;
 
     public MainWindow()
     {
@@ -367,6 +368,7 @@ public partial class MainWindow : Window
         if (double.IsNaN(_lastPiThreads) || double.IsNaN(_lastPiThreadPool))
         {
             LblComparison.Text = "Uruchom oba warianty, aby zobaczyć porównanie.";
+            LblComparison.Foreground = Brushes.Black;
             return;
         }
 
@@ -379,9 +381,23 @@ public partial class MainWindow : Window
         else
             faster = $"Thread szybszy o {diff:F1} ms.";
 
+        double errThreads = Math.Abs(_lastPiThreads - MathPi);
+        double errThreadPool = Math.Abs(_lastPiThreadPool - MathPi);
+        double percentErrThreads = errThreads / MathPi * 100;
+        double percentErrThreadPool = errThreadPool / MathPi * 100;
+
+        // Kolorowanie w zależności od dokładności
+        if (percentErrThreads < percentErrThreadPool)
+            LblComparison.Foreground = Brushes.Green; // Thread dokładniejszy
+        else if (percentErrThreads > percentErrThreadPool)
+            LblComparison.Foreground = Brushes.Blue; // ThreadPool dokładniejszy
+        else
+            LblComparison.Foreground = Brushes.Black; // Remis
+
         LblComparison.Text =
-            $"Thread:     π={_lastPiThreads:F6}, {_lastTimeThreads:F1} ms\n" +
-            $"ThreadPool: π={_lastPiThreadPool:F6}, {_lastTimeThreadPool:F1} ms\n" +
+            $"Thread:     π={_lastPiThreads:F6}, błąd={errThreads:E2} ({percentErrThreads:F4}%), {_lastTimeThreads:F1} ms\n" +
+            $"ThreadPool: π={_lastPiThreadPool:F6}, błąd={errThreadPool:E2} ({percentErrThreadPool:F4}%), {_lastTimeThreadPool:F1} ms\n" +
+            $"Wartość π:  {MathPi:F6}\n" +
             faster;
     }
 
